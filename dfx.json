@@ -1,0 +1,26 @@
+{
+  "canisters": {
+    "geohash_backend": {
+      "candid": "src/geohash_backend/geohash_backend.did",
+      "package": "geohash_backend",
+      "type": "rust"
+    },
+    "geohash_frontend": {
+      "dependencies": [
+        "geohash_backend"
+      ],
+      "source": [
+        "src/geohash_frontend/assets"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

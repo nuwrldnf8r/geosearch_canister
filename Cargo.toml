@@ -1,0 +1,4 @@
+[workspace]
+members = [
+    "src/geohash_backend",
+]
