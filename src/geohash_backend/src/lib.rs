@@ -38,9 +38,10 @@ fn encode_coords(c: Coord, size: usize) -> String {
 fn _index_lookup(geohash: &String, id:&String){
     let _geohash = get_id(geohash);
     GEO_HASH_LOOKUP.with(|geo_hash_lookup|{
-        geo_hash_lookup.borrow_mut().insert(id.to_string(),_geohash);
+        geo_hash_lookup.borrow_mut().insert(id.clone(),_geohash);
     })
 }
+
 
 fn lookup(id: &String) -> String{
     let _id = get_id(id);
@@ -59,34 +60,39 @@ fn lookup(id: &String) -> String{
     })
 }
 
-fn _index(geohash: &String, id:&String ) { //
+
+fn _index(geohash_ar: Vec<String>, id:&String ) { //
     GEO_INDEX.with(|geo_index|{
         let mut index_mut = geo_index.borrow_mut();
-        let key = get_id(&id);
-        if index_mut.contains_key(&key){
-            let _geohash = get_id(geohash);
-            let v = index_mut.get_mut(&_geohash).unwrap();
-            v.push(id.to_string());
-            
-        } else {
-            let mut v: Vec<String> = Vec::new();
-            let _id = id.to_string();
-            v.push(_id);
-            index_mut.insert(get_id(geohash), v);
+        for geohash in geohash_ar{
+            let key = get_id(&geohash);
+            if index_mut.contains_key(&key){        
+                let v = index_mut.get_mut(&key).unwrap();
+                v.push(id.to_string());
+                
+                
+            } else {
+                let mut v: Vec<String> = Vec::new();
+                v.push(id.to_string());
+                index_mut.insert(key, v);
+            }
         }
+        
     })
 }
 
 fn get(geohash: String) -> Vec<String>{
+    let empty_vec: &Vec<String> = &Vec::new();
     GEO_INDEX.with(|geo_index|{
         let key = get_id(&geohash);
         let _index = geo_index.borrow();
-        let val = _index.get(&key).unwrap();
+        let val: &Vec<String> = _index.get(&key).unwrap_or_else(||{empty_vec});
         let mut ret: Vec<String> = Vec::new();
         for v in val{
             ret.push(v.to_string());
         }
         ret
+        
     })
 }
 
@@ -104,7 +110,7 @@ fn get_precision(distance: &f64) -> usize{
         9: ± 4.8 m x 4.8 m
         10: ± 1.2 m x 59.5 cm
     */
-    let distance: f64 = distance.clone() as f64; 
+    let distance = *distance; 
     if distance > 156.0 && distance < 1252.0 {
         2
     } else if distance > 39.0 && distance < 156.0 {
@@ -120,6 +126,7 @@ fn get_precision(distance: &f64) -> usize{
     }
 }
 
+
 fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     let dlat = (lat2 - lat1).to_radians();
     let dlon = (lon2 - lon1).to_radians();
@@ -131,31 +138,25 @@ fn haversine(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     EARTH_RADIUS * c
 }
 
-fn get_distance(geohash1: &String, geohash2: &String) -> f64{
-    let (coord1, _, _) = decode(geohash1).unwrap();
+fn get_distance(coord1: &Coord, geohash2: &String) -> f64{
     let (coord2, _, _) = decode(geohash2).unwrap();
-
     haversine(coord1.x, coord1.y, coord2.x, coord2.y)*0.001 //returns distance in kilometers
-    //0.0
 }
+
 
 #[update]
 fn index(geohash: String, id: String) {
     //let id = get_id(&id);
     let (c,_,_) = decode(&geohash).unwrap();
+    let to_index: Vec<String> = vec![
+        encode_coords(c.clone(),2),
+        encode_coords(c.clone(),3),
+        encode_coords(c.clone(),4),
+        encode_coords(c.clone(),5),
+        encode_coords(c.clone(),6)
+    ];
     
-    let _geohash2 = encode_coords(c.clone(),2);
-    let _geohash3 = encode_coords(c.clone(),3);
-    let _geohash4 = encode_coords(c.clone(),4);
-    let _geohash5 = encode_coords(c.clone(),5);
-    let _geohash6 = encode_coords(c.clone(),6);
-
-    _index(&_geohash2,&id);
-    _index(&_geohash3,&id);
-    _index(&_geohash4,&id);
-    _index(&_geohash5,&id);
-    _index(&_geohash6,&id);
-
+    _index(to_index,&id);
     _index_lookup(&geohash,&id);
 
 }
@@ -176,19 +177,23 @@ fn find(geohash: String, distance: f64) -> Vec<String>{ //distance is in kilomet
         Direction::W,
         Direction::NW
     ];
+    let _ids = get(_geohash.clone());
+    for id in _ids{
+        ret.push(id);
+    }
     for direction in &directions {
         let _neighbor = neighbor(&_geohash, *direction);
         match _neighbor{
             Ok(n)=>{
                 let _ids = get(n);
                 for id in _ids{
+                    
                     let geohash2 = lookup(&id);
-                    let dist = get_distance(&geohash,&geohash2);
+                    let dist = get_distance(&c,&geohash2);
                     if dist<=distance{
                         ret.push(id);
                     }
                 }
-                
             },
             Err(_)=>{}
         }
