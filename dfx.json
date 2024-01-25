@@ -4,15 +4,6 @@
       "candid": "src/geohash_backend/geohash_backend.did",
       "package": "geohash_backend",
       "type": "rust"
-    },
-    "geohash_frontend": {
-      "dependencies": [
-        "geohash_backend"
-      ],
-      "source": [
-        "src/geohash_frontend/assets"
-      ],
-      "type": "assets"
     }
   },
   "defaults": {

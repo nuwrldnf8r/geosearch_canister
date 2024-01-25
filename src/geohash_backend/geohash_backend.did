@@ -1,3 +1,4 @@
 service : {
-    "greet": (text) -> (text) query;
+    index: (text, text) -> ();
+    find: (text, float64) -> (vec text);
 }
