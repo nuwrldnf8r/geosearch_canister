@@ -60,38 +60,49 @@ const find = async (geohash, distance) => {
   try{
     const actor = await createActor()    
     console.log('finding')
-    let ret = await actor.index(geohash, distance)
+    let ret = await actor.find(geohash, distance)
     return ret
     
   } catch(e){
+    console.log(e)
     return {error: e.message}
   }
 }
 
 const geohash = (x,y) => {
-  return GeoHash.encode(x, y, 9)
+  return GeoHash.encode(x, y, 10)
 }
 
 const run = async () => {
-
-    let pt1 = {geohash: geohash(-34.099050, 18.399995), id: 'Point1'}
+  
+    /*
+    let pt1 = {geohash: geohash(-34.099050, 18.399995), id: 'Point5'}
     let ret = await index(pt1.geohash, pt1.id)
     console.log(ret)
 
     
-    let pt2 = {geohash: geohash(-34.089275, 18.359075), id: 'Point2'}
+    let pt2 = {geohash: geohash(-34.089275, 18.359075), id: 'Point6'}
     ret = await index(pt2.geohash, pt2.id)
     console.log(ret)
-    
+  
     
 
-    /*
-    let pt1 = {geohash: geohash(-34.099050, 18.399995), id: 'Point1'}
-    console.log(pt1.geohash)
-    
-    let ret = await find(pt1.geohash,10.1)
+    let pt3 = {geohash: geohash(-34.052167, 18.378220),id: 'Point7 - Hout Bay'}
+    ret = await index(pt3.geohash, pt3.id)
     console.log(ret)
-    */
+
+   
+   let pt4 = {geohash: geohash(-33.983004, 18.442157),id: 'Point8 - Kirstenbosch'}
+   ret = await index(pt4.geohash, pt4.id)
+   console.log(ret)
+   */
+  
+    ret = await find(geohash(-34.099050, 18.399995),15)
+    console.log(ret) 
+    
+
+    
+    
 
 }
 
